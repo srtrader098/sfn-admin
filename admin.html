@@ -1,1 +1,651 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SFN Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { background: #030a06; color: #fff; font-family: 'Space Grotesk', sans-serif; min-height: 100vh; }
+.mono { font-family: 'JetBrains Mono', monospace; }
+.glass { background: rgba(8, 22, 14, 0.9); border: 1px solid rgba(0, 255, 135, 0.2); backdrop-filter: blur(16px); border-radius: 18px; }
+.emerald-glow { color: #00ff87; text-shadow: 0 0 12px rgba(0, 255, 135, 0.6); }
+.btn-primary { background: linear-gradient(135deg, #00ff87 0%, #059669 100%); color: #000; font-weight: 800; transition: all 0.15s; }
+.btn-primary:active { transform: scale(0.97); }
+.btn-primary:disabled { background: #1a382b; color: #6b7280; cursor: not-allowed; }
+.btn-danger { background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%); color: #fff; font-weight: 700; }
+.btn-success { background: linear-gradient(135deg, #10b981 0%, #047857 100%); color: #fff; font-weight: 700; }
+.btn-warn { background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%); color: #fff; font-weight: 700; }
+.tab-active { background: #00ff87 !important; color: #000 !important; }
+.stat-card { background: linear-gradient(135deg, rgba(0, 255, 135, 0.08) 0%, rgba(8, 22, 14, 0.95) 100%); border: 1px solid rgba(0, 255, 135, 0.25); }
+input, select, textarea { background: rgba(0,0,0,0.6); border: 1px solid rgba(0, 255, 135, 0.25); color: #fff; border-radius: 10px; padding: 10px 12px; font-size: 13px; width: 100%; outline: none; }
+input:focus, select:focus, textarea:focus { border-color: #00ff87; box-shadow: 0 0 0 2px rgba(0, 255, 135, 0.2); }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th { background: rgba(0, 255, 135, 0.08); color: #00ff87; text-align: left; padding: 10px 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; font-size: 10px; }
+td { padding: 10px 8px; border-bottom: 1px solid rgba(0, 255, 135, 0.1); vertical-align: middle; }
+tr:hover td { background: rgba(0, 255, 135, 0.04); }
+.badge { padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+.badge-green { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); }
+.badge-yellow { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); }
+.badge-red { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); }
+.badge-blue { background: rgba(59, 130, 246, 0.2); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.4); }
+.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 12px 20px; border-radius: 12px; font-weight: 700; z-index: 9999; animation: slideDown 0.3s ease-out; }
+@keyframes slideDown { from { transform: translate(-50%, -20px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner { animation: spin 1s linear infinite; }
+.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+::-webkit-scrollbar-thumb { background: rgba(0, 255, 135, 0.3); border-radius: 3px; }
+.tab-btn { padding: 10px 14px; border-radius: 10px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; cursor: pointer; transition: all 0.15s; background: rgba(0,0,0,0.4); color: #9ca3af; border: 1px solid rgba(255,255,255,0.05); }
+.tab-btn:hover { color: #00ff87; border-color: rgba(0, 255, 135, 0.3); }
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
+  <div class="glass p-6 w-full max-w-sm space-y-5">
+    <div class="text-center space-y-2">
+      <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-500/10 border border-emerald-400/50 flex items-center justify-center text-3xl">🔐</div>
+      <h1 class="text-xl font-black emerald-glow tracking-wide">SFN ADMIN PANEL</h1>
+      <p class="text-[11px] text-gray-400">Restricted Access · Authorized Only</p>
+    </div>
+    <div class="space-y-3">
+      <input type="password" id="loginPassword" placeholder="Enter Admin Password" class="text-center mono">
+      <button onclick="doLogin()" id="loginBtn" class="w-full btn-primary py-3.5 rounded-xl text-sm uppercase tracking-wider">🔓 Login</button>
+      <p id="loginError" class="text-[11px] text-red-400 text-center hidden"></p>
+    </div>
+    <p class="text-[10px] text-gray-500 text-center">Session expires in 24 hours</p>
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div id="appScreen" class="hidden">
+  <!-- HEADER -->
+  <div class="sticky top-0 z-40 bg-[#030a06]/95 backdrop-blur-lg border-b border-emerald-500/20 px-4 py-3">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-400/50 flex items-center justify-center text-lg">⚙️</div>
+        <div>
+          <h1 class="font-black text-sm emerald-glow">SFN ADMIN</h1>
+          <p class="text-[9px] text-gray-500">START FARMING NOW</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <div id="liveStatus" class="hidden sm:flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-full">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="text-[10px] text-emerald-300 font-bold">LIVE</span>
+        </div>
+        <button onclick="doLogout()" class="bg-red-500/15 border border-red-500/40 text-red-400 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="px-4 py-3 border-b border-emerald-500/10 overflow-x-auto">
+    <div class="max-w-7xl mx-auto flex gap-2">
+      <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="tab-btn tab-active">📊 Dashboard</button>
+      <button onclick="switchTab('users')" id="tab-btn-users" class="tab-btn">👥 Users</button>
+      <button onclick="switchTab('deposits')" id="tab-btn-deposits" class="tab-btn">💳 Deposits</button>
+      <button onclick="switchTab('withdraws')" id="tab-btn-withdraws" class="tab-btn">📤 Withdraws</button>
+      <button onclick="switchTab('transactions')" id="tab-btn-transactions" class="tab-btn">📝 Transactions</button>
+      <button onclick="switchTab('broadcast')" id="tab-btn-broadcast" class="tab-btn">📢 Broadcast</button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="max-w-7xl mx-auto p-4 pb-12">
+
+    <!-- DASHBOARD TAB -->
+    <div id="tab-dashboard" class="space-y-4">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="stat-card rounded-2xl p-4">
+          <p class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Total Users</p>
+          <p class="text-2xl font-black emerald-glow mono mt-1" id="stat-total-users">-</p>
+          <p class="text-[10px] text-gray-500 mt-0.5">Verified: <span id="stat-verified" class="text-emerald-400">-</span></p>
+        </div>
+        <div class="stat-card rounded-2xl p-4">
+          <p class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Total Balance</p>
+          <p class="text-2xl font-black emerald-glow mono mt-1" id="stat-total-balance">-</p>
+          <p class="text-[10px] text-gray-500 mt-0.5">SFN coins</p>
+        </div>
+        <div class="stat-card rounded-2xl p-4">
+          <p class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Pending Deposits</p>
+          <p class="text-2xl font-black text-yellow-400 mono mt-1" id="stat-pending-dep">-</p>
+          <p class="text-[10px] text-gray-500 mt-0.5">$<span id="stat-pending-dep-amt">-</span></p>
+        </div>
+        <div class="stat-card rounded-2xl p-4">
+          <p class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Pending Withdraws</p>
+          <p class="text-2xl font-black text-orange-400 mono mt-1" id="stat-pending-wd">-</p>
+          <p class="text-[10px] text-gray-500 mt-0.5">$<span id="stat-pending-wd-amt">-</span></p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div class="stat-card rounded-2xl p-4">
+          <p class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">New Users Today</p>
+          <p class="text-xl font-black text-blue-400 mono mt-1" id="stat-new-today">-</p>
+        </div>
+        <div class="stat-card rounded-2xl p-4 col-span-2">
+          <p class="text-[10px] text-gray-400 uppercase tracking-wider font-bold mb-2">Quick Actions</p>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="loadAll()" class="bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase">🔄 Refresh All</button>
+            <button onclick="switchTab('deposits')" class="bg-yellow-500/15 border border-yellow-500/40 text-yellow-400 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase">💳 Review Deposits</button>
+            <button onclick="switchTab('withdraws')" class="bg-orange-500/15 border border-orange-500/40 text-orange-400 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase">📤 Review Withdraws</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass p-4">
+        <h3 class="text-xs font-black uppercase tracking-wider text-emerald-400 mb-3">🏆 Top 10 Richest Users</h3>
+        <div class="overflow-x-auto">
+          <table>
+            <thead><tr><th>#</th><th>UID</th><th>Name</th><th class="text-right">Balance</th></tr></thead>
+            <tbody id="top-users-list"><tr><td colspan="4" class="text-center text-gray-500 text-xs py-4">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS TAB -->
+    <div id="tab-users" class="space-y-3 hidden">
+      <div class="glass p-4">
+        <div class="flex flex-col md:flex-row gap-2 mb-3">
+          <input type="text" id="userSearch" placeholder="🔍 Search by UID, TG ID, Name, Username..." onkeyup="if(event.key==='Enter')loadUsers()">
+          <select id="userFilter" class="md:w-40" onchange="loadUsers()">
+            <option value="all">All Users</option>
+            <option value="verified">✅ Verified</option>
+            <option value="unverified">⏳ Unverified</option>
+            <option value="banned">🚫 Banned</option>
+          </select>
+          <button onclick="loadUsers()" class="btn-primary px-5 py-2.5 rounded-xl text-xs uppercase whitespace-nowrap">Search</button>
+        </div>
+        <p class="text-[10px] text-gray-400 mb-2">Total: <span id="users-total-count" class="text-emerald-400 font-bold mono">-</span> users</p>
+        <div class="overflow-x-auto">
+          <table>
+            <thead><tr>
+              <th>UID</th><th>Name</th><th class="text-right">Balance</th><th class="text-center">Refer</th><th class="text-center">Status</th><th class="text-center">NFT</th><th class="text-center">Actions</th>
+            </tr></thead>
+            <tbody id="users-list"><tr><td colspan="7" class="text-center text-gray-500 text-xs py-4">Loading...</td></tr></tbody>
+          </table>
+        </div>
+        <div class="flex items-center justify-between mt-3">
+          <button onclick="usersPrevPage()" id="users-prev-btn" class="bg-white/5 border border-white/10 px-4 py-2 rounded-lg text-xs font-bold disabled:opacity-30">← Prev</button>
+          <span class="text-[10px] text-gray-400">Page <span id="users-page-num" class="text-emerald-400 font-bold">1</span></span>
+          <button onclick="usersNextPage()" id="users-next-btn" class="bg-white/5 border border-white/10 px-4 py-2 rounded-lg text-xs font-bold disabled:opacity-30">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEPOSITS TAB -->
+    <div id="tab-deposits" class="space-y-3 hidden">
+      <div class="glass p-4">
+        <div class="flex gap-2 mb-3">
+          <button onclick="setDepFilter('Pending')" id="dep-filter-Pending" class="tab-btn tab-active">⏳ Pending</button>
+          <button onclick="setDepFilter('Approved')" id="dep-filter-Approved" class="tab-btn">✅ Approved</button>
+          <button onclick="setDepFilter('Rejected')" id="dep-filter-Rejected" class="tab-btn">❌ Rejected</button>
+          <button onclick="setDepFilter('all')" id="dep-filter-all" class="tab-btn">📋 All</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table>
+            <thead><tr><th>ID</th><th>UID</th><th class="text-right">Amount</th><th>Details</th><th>Date</th><th class="text-center">Status</th><th class="text-center">Action</th></tr></thead>
+            <tbody id="deposits-list"><tr><td colspan="7" class="text-center text-gray-500 text-xs py-4">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- WITHDRAWS TAB -->
+    <div id="tab-withdraws" class="space-y-3 hidden">
+      <div class="glass p-4">
+        <div class="flex gap-2 mb-3">
+          <button onclick="setWdFilter('Pending')" id="wd-filter-Pending" class="tab-btn tab-active">⏳ Pending</button>
+          <button onclick="setWdFilter('Approved')" id="wd-filter-Approved" class="tab-btn">✅ Approved</button>
+          <button onclick="setWdFilter('Rejected')" id="wd-filter-Rejected" class="tab-btn">❌ Rejected</button>
+          <button onclick="setWdFilter('all')" id="wd-filter-all" class="tab-btn">📋 All</button>
+        </div>
+        <div class="bg-blue-500/5 border border-blue-500/30 rounded-xl p-3 mb-3">
+          <p class="text-[10px] text-blue-300">ℹ️ <strong>Reject করলে amount স্বয়ংক্রিয়ভাবে user এর balance এ refund হবে।</strong></p>
+        </div>
+        <div class="overflow-x-auto">
+          <table>
+            <thead><tr><th>ID</th><th>UID</th><th class="text-right">Amount</th><th>Details</th><th>Date</th><th class="text-center">Status</th><th class="text-center">Action</th></tr></thead>
+            <tbody id="withdraws-list"><tr><td colspan="7" class="text-center text-gray-500 text-xs py-4">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRANSACTIONS TAB -->
+    <div id="tab-transactions" class="space-y-3 hidden">
+      <div class="glass p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-xs font-black uppercase tracking-wider text-emerald-400">Recent Transactions</h3>
+          <button onclick="loadTransactions()" class="bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase">🔄 Refresh</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table>
+            <thead><tr><th>ID</th><th>UID</th><th>Type</th><th class="text-right">Amount</th><th>Network</th><th class="text-center">Status</th><th>Date</th></tr></thead>
+            <tbody id="transactions-list"><tr><td colspan="7" class="text-center text-gray-500 text-xs py-4">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- BROADCAST TAB -->
+    <div id="tab-broadcast" class="space-y-3 hidden">
+      <div class="glass p-4 space-y-3">
+        <h3 class="text-xs font-black uppercase tracking-wider text-emerald-400">📢 Broadcast Message</h3>
+        <div class="bg-yellow-500/5 border border-yellow-500/30 rounded-xl p-3">
+          <p class="text-[10px] text-yellow-300">⚠️ Markdown supported: *bold* _italic_ `code` [link](url)</p>
+        </div>
+        <select id="broadcastTarget">
+          <option value="all">📢 All Users (Not Banned)</option>
+          <option value="verified">✅ Verified Only</option>
+          <option value="active">🔥 Active (Last 7 Days)</option>
+        </select>
+        <textarea id="broadcastMessage" rows="8" placeholder="Type your message here..." class="mono"></textarea>
+        <button onclick="sendBroadcast()" id="broadcastBtn" class="w-full btn-primary py-3.5 rounded-xl text-sm uppercase tracking-wider">📤 Send Broadcast</button>
+        <p class="text-[10px] text-gray-500 text-center">Messages sent one-by-one with 100ms delay to avoid flood limits</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== USER EDIT MODAL ===== -->
+<div id="userModal" class="modal-bg hidden">
+  <div class="glass p-5 w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-sm font-black emerald-glow uppercase" id="modal-user-title">User Details</h3>
+      <button onclick="closeUserModal()" class="text-gray-400 hover:text-white text-xl">✕</button>
+    </div>
+    <div id="modal-user-body" class="space-y-4">
+      <div class="grid grid-cols-2 gap-2 text-[11px]">
+        <div class="bg-black/40 p-2.5 rounded-lg"><span class="text-gray-500">UID:</span> <span class="mono text-emerald-400 font-bold" id="m-uid">-</span></div>
+        <div class="bg-black/40 p-2.5 rounded-lg"><span class="text-gray-500">TG:</span> <span class="mono text-emerald-400 font-bold" id="m-tgid">-</span></div>
+        <div class="bg-black/40 p-2.5 rounded-lg"><span class="text-gray-500">Balance:</span> <span class="mono text-emerald-400 font-bold" id="m-balance">-</span></div>
+        <div class="bg-black/40 p-2.5 rounded-lg"><span class="text-gray-500">Refer:</span> <span class="mono text-emerald-400 font-bold" id="m-refer">-</span></div>
+      </div>
+
+      <div class="border-t border-emerald-500/20 pt-4">
+        <p class="text-[10px] text-gray-400 uppercase font-bold mb-2">💰 Balance Management</p>
+        <div class="flex gap-2">
+          <input type="number" id="m-bal-amount" placeholder="Amount (SFN)" class="mono">
+          <button onclick="userAction('add_balance')" class="btn-success px-3 py-2 rounded-lg text-[10px] font-bold">+ Add</button>
+          <button onclick="userAction('set_balance')" class="btn-warn px-3 py-2 rounded-lg text-[10px] font-bold">Set</button>
+        </div>
+      </div>
+
+      <div class="border-t border-emerald-500/20 pt-4">
+        <p class="text-[10px] text-gray-400 uppercase font-bold mb-2">⚡ Mining Speed / Spin</p>
+        <div class="flex gap-2 mb-2">
+          <input type="number" id="m-speed-amount" placeholder="Speed (SFN/day)" class="mono">
+          <button onclick="userAction('set_speed')" class="btn-primary px-4 py-2 rounded-lg text-[10px] font-bold">Set Speed</button>
+        </div>
+        <div class="flex gap-2">
+          <input type="number" id="m-spin-amount" placeholder="Extra spins" class="mono">
+          <button onclick="userAction('give_spin')" class="bg-purple-500/20 border border-purple-500/50 text-purple-300 px-4 py-2 rounded-lg text-[10px] font-bold">🎡 Give Spin</button>
+        </div>
+      </div>
+
+      <div class="border-t border-emerald-500/20 pt-4">
+        <p class="text-[10px] text-gray-400 uppercase font-bold mb-2">🛠️ Account Actions</p>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="userAction('verify')" class="btn-success py-2.5 rounded-lg text-[10px] font-bold uppercase">✅ Verify</button>
+          <button onclick="userAction('unverify')" class="bg-gray-500/20 border border-gray-500/40 text-gray-300 py-2.5 rounded-lg text-[10px] font-bold uppercase">Unverify</button>
+          <button onclick="userAction('ban')" class="btn-danger py-2.5 rounded-lg text-[10px] font-bold uppercase">🚫 Ban</button>
+          <button onclick="userAction('unban')" class="btn-success py-2.5 rounded-lg text-[10px] font-bold uppercase">Unban</button>
+        </div>
+        <button onclick="userAction('delete')" class="w-full mt-2 bg-red-900/40 border border-red-500/60 text-red-300 py-2.5 rounded-lg text-[10px] font-bold uppercase">🗑️ Delete User (Permanent)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ================= CONFIG =================
+const API = "https://sfn-backend.onrender.com";
+const TOKEN_KEY = "sfn_admin_token";
+
+let currentUser = null;
+let usersPage = 0;
+const USERS_LIMIT = 50;
+let usersTotal = 0;
+let depFilter = "Pending";
+let wdFilter = "Pending";
+let autoRefreshTimer = null;
+
+// ================= INIT =================
+window.addEventListener('DOMContentLoaded', () => {
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (token) {
+    apiCall('/admin/check', {})
+      .then(r => { if (r.success) showApp(); else { localStorage.removeItem(TOKEN_KEY); } })
+      .catch(() => localStorage.removeItem(TOKEN_KEY));
+  }
+  document.getElementById('loginPassword').addEventListener('keyup', e => { if (e.key === 'Enter') doLogin(); });
+});
+
+// ================= API =================
+async function apiCall(endpoint, data = {}) {
+  const token = localStorage.getItem(TOKEN_KEY);
+  try {
+    const res = await fetch(API + endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Token': token || '' },
+      body: JSON.stringify(data)
+    });
+    const json = await res.json();
+    if (res.status === 401) { doLogout(); return { success: false, error: 'Auth failed' }; }
+    return json;
+  } catch (e) {
+    console.error(e);
+    return { success: false, error: 'Network error' };
+  }
+}
+
+// ================= AUTH =================
+async function doLogin() {
+  const pw = document.getElementById('loginPassword').value;
+  const btn = document.getElementById('loginBtn');
+  const err = document.getElementById('loginError');
+  if (!pw) { err.textContent = "Password required"; err.classList.remove('hidden'); return; }
+  btn.disabled = true; btn.textContent = "Logging in...";
+  err.classList.add('hidden');
+  try {
+    const res = await fetch(API + '/admin/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw })
+    });
+    const data = await res.json();
+    if (data.success) {
+      localStorage.setItem(TOKEN_KEY, data.token);
+      showApp();
+    } else {
+      err.textContent = data.error || "Login failed";
+      err.classList.remove('hidden');
+      btn.disabled = false; btn.textContent = "🔓 Login";
+    }
+  } catch (e) {
+    err.textContent = "Network error";
+    err.classList.remove('hidden');
+    btn.disabled = false; btn.textContent = "🔓 Login";
+  }
+}
+
+function doLogout() {
+  localStorage.removeItem(TOKEN_KEY);
+  if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('appScreen').classList.add('hidden');
+  document.getElementById('loginPassword').value = '';
+  document.getElementById('loginBtn').disabled = false;
+  document.getElementById('loginBtn').textContent = "🔓 Login";
+}
+
+function showApp() {
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('appScreen').classList.remove('hidden');
+  loadAll();
+  if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+  autoRefreshTimer = setInterval(() => {
+    loadStats();
+    if (document.getElementById('tab-deposits').classList.contains('hidden') === false) loadDeposits();
+    if (document.getElementById('tab-withdraws').classList.contains('hidden') === false) loadWithdraws();
+  }, 30000);
+}
+
+function loadAll() {
+  loadStats();
+  loadUsers();
+}
+
+// ================= TABS =================
+function switchTab(name) {
+  ['dashboard','users','deposits','withdraws','transactions','broadcast'].forEach(t => {
+    document.getElementById('tab-' + t).classList.add('hidden');
+    document.getElementById('tab-btn-' + t).classList.remove('tab-active');
+  });
+  document.getElementById('tab-' + name).classList.remove('hidden');
+  document.getElementById('tab-btn-' + name).classList.add('tab-active');
+  if (name === 'dashboard') loadStats();
+  if (name === 'users') loadUsers();
+  if (name === 'deposits') loadDeposits();
+  if (name === 'withdraws') loadWithdraws();
+  if (name === 'transactions') loadTransactions();
+}
+
+// ================= STATS =================
+async function loadStats() {
+  const r = await apiCall('/admin/stats');
+  if (!r.success) return;
+  const s = r.stats;
+  document.getElementById('stat-total-users').textContent = s.total_users;
+  document.getElementById('stat-verified').textContent = s.verified_users;
+  document.getElementById('stat-total-balance').textContent = s.total_balance.toLocaleString();
+  document.getElementById('stat-pending-dep').textContent = s.pending_deposits;
+  document.getElementById('stat-pending-dep-amt').textContent = s.pending_deposit_amount.toFixed(2);
+  document.getElementById('stat-pending-wd').textContent = s.pending_withdraws;
+  document.getElementById('stat-pending-wd-amt').textContent = s.pending_withdraw_amount.toFixed(2);
+  document.getElementById('stat-new-today').textContent = s.new_users_today;
+  const tbody = document.getElementById('top-users-list');
+  tbody.innerHTML = s.top_users.map((u, i) =>
+    `<tr><td class="text-gray-500 mono">#${i+1}</td><td class="mono text-emerald-400">${u.uid}</td><td>${u.name || 'N/A'}</td><td class="text-right mono text-emerald-300 font-bold">${u.balance.toLocaleString()}</td></tr>`
+  ).join('') || '<tr><td colspan="4" class="text-center text-gray-500 text-xs py-4">No users yet</td></tr>';
+}
+
+// ================= USERS =================
+async function loadUsers() {
+  const search = document.getElementById('userSearch').value.trim();
+  const filter = document.getElementById('userFilter').value;
+  const r = await apiCall('/admin/users', { search, limit: USERS_LIMIT, offset: usersPage * USERS_LIMIT });
+  if (!r.success) return;
+  let list = r.users;
+  if (filter === 'verified') list = list.filter(u => u.verified);
+  if (filter === 'unverified') list = list.filter(u => !u.verified);
+  if (filter === 'banned') list = list.filter(u => u.is_banned);
+  usersTotal = r.total;
+  document.getElementById('users-total-count').textContent = r.total;
+  const tbody = document.getElementById('users-list');
+  if (list.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500 text-xs py-4">No users found</td></tr>'; return; }
+  tbody.innerHTML = list.map(u => `
+    <tr>
+      <td class="mono text-emerald-400 text-[10px]">${u.uid}</td>
+      <td>${(u.first_name||'') + ' ' + (u.last_name||'')}<br><span class="text-[9px] text-gray-500">@${u.username || 'none'}</span></td>
+      <td class="text-right mono font-bold text-emerald-300">${u.balance.toFixed(2)}</td>
+      <td class="text-center mono">${u.refer_count}</td>
+      <td class="text-center">
+        ${u.is_banned ? '<span class="badge badge-red">Banned</span>' : (u.verified ? '<span class="badge badge-green">✓ Ver</span>' : '<span class="badge badge-yellow">⏳ Unv</span>')}
+      </td>
+      <td class="text-center text-[9px] text-gray-400">${u.active_nft || 'Free'}</td>
+      <td class="text-center">
+        <button onclick='openUserModal(${JSON.stringify(u)})' class="btn-primary px-3 py-1.5 rounded-lg text-[10px]">Edit</button>
+      </td>
+    </tr>
+  `).join('');
+  document.getElementById('users-page-num').textContent = usersPage + 1;
+  document.getElementById('users-prev-btn').disabled = usersPage === 0;
+  document.getElementById('users-next-btn').disabled = (usersPage + 1) * USERS_LIMIT >= usersTotal;
+}
+function usersPrevPage() { if (usersPage > 0) { usersPage--; loadUsers(); } }
+function usersNextPage() { if ((usersPage + 1) * USERS_LIMIT < usersTotal) { usersPage++; loadUsers(); } }
+
+// ================= USER MODAL =================
+function openUserModal(user) {
+  currentUser = user;
+  document.getElementById('m-uid').textContent = user.uid;
+  document.getElementById('m-tgid').textContent = user.tg_id;
+  document.getElementById('m-balance').textContent = user.balance.toFixed(2);
+  document.getElementById('m-refer').textContent = user.refer_count;
+  document.getElementById('modal-user-title').textContent = (user.first_name || 'User') + ' ' + (user.last_name || '');
+  document.getElementById('m-bal-amount').value = '';
+  document.getElementById('m-speed-amount').value = user.mining_speed || 500;
+  document.getElementById('m-spin-amount').value = '';
+  document.getElementById('userModal').classList.remove('hidden');
+}
+function closeUserModal() { document.getElementById('userModal').classList.add('hidden'); currentUser = null; }
+
+async function userAction(action) {
+  if (!currentUser) return;
+  let value = null;
+  if (action === 'add_balance' || action === 'set_balance') value = document.getElementById('m-bal-amount').value;
+  if (action === 'set_speed') value = document.getElementById('m-speed-amount').value;
+  if (action === 'give_spin') value = document.getElementById('m-spin-amount').value;
+  if (action === 'delete' && !confirm(`Delete ${currentUser.uid} permanently? This cannot be undone!`)) return;
+  const r = await apiCall('/admin/user/edit', { uid: currentUser.uid, action, value });
+  if (r.success) {
+    showToast('✅ ' + r.message, 'green');
+    closeUserModal();
+    loadUsers();
+  } else {
+    showToast('❌ ' + (r.error || 'Failed'), 'red');
+  }
+}
+
+// ================= DEPOSITS =================
+function setDepFilter(f) {
+  depFilter = f;
+  ['Pending','Approved','Rejected','all'].forEach(x => {
+    const el = document.getElementById('dep-filter-' + x);
+    if (el) el.classList.toggle('tab-active', x === f);
+  });
+  loadDeposits();
+}
+async function loadDeposits() {
+  const r = await apiCall('/admin/deposits', { status: depFilter });
+  if (!r.success) return;
+  const tbody = document.getElementById('deposits-list');
+  if (!r.deposits || r.deposits.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500 text-xs py-4">No deposits</td></tr>'; return;
+  }
+  tbody.innerHTML = r.deposits.map(d => `
+    <tr>
+      <td class="mono text-gray-400 text-[10px]">#${d.id}</td>
+      <td class="mono text-emerald-400 text-[10px]">${d.uid}</td>
+      <td class="text-right mono font-bold text-emerald-300">$${d.amount.toFixed(2)}</td>
+      <td class="text-[10px] text-gray-400 max-w-xs truncate">${d.details || ''}</td>
+      <td class="text-[10px] text-gray-500">${(d.created_at||'').substring(0,16)}</td>
+      <td class="text-center">${statusBadge(d.status)}</td>
+      <td class="text-center">
+        ${d.status === 'Pending' ? `
+          <button onclick="depAction(${d.id}, 'approve')" class="btn-success px-3 py-1.5 rounded-lg text-[10px]">✅</button>
+          <button onclick="depAction(${d.id}, 'reject')" class="btn-danger px-3 py-1.5 rounded-lg text-[10px] ml-1">❌</button>
+        ` : '<span class="text-gray-600 text-[10px]">Done</span>'}
+      </td>
+    </tr>
+  `).join('');
+}
+async function depAction(id, action) {
+  if (!confirm(`${action.toUpperCase()} this deposit?`)) return;
+  const r = await apiCall('/admin/deposit/action', { id, action });
+  showToast(r.success ? '✅ ' + r.message : '❌ ' + r.error, r.success ? 'green' : 'red');
+  if (r.success) { loadDeposits(); loadStats(); }
+}
+
+// ================= WITHDRAWS =================
+function setWdFilter(f) {
+  wdFilter = f;
+  ['Pending','Approved','Rejected','all'].forEach(x => {
+    const el = document.getElementById('wd-filter-' + x);
+    if (el) el.classList.toggle('tab-active', x === f);
+  });
+  loadWithdraws();
+}
+async function loadWithdraws() {
+  const r = await apiCall('/admin/withdraws', { status: wdFilter });
+  if (!r.success) return;
+  const tbody = document.getElementById('withdraws-list');
+  if (!r.withdraws || r.withdraws.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500 text-xs py-4">No withdraws</td></tr>'; return;
+  }
+  tbody.innerHTML = r.withdraws.map(w => `
+    <tr>
+      <td class="mono text-gray-400 text-[10px]">#${w.id}</td>
+      <td class="mono text-emerald-400 text-[10px]">${w.uid}</td>
+      <td class="text-right mono font-bold text-emerald-300">$${w.amount.toFixed(2)}</td>
+      <td class="text-[10px] text-gray-400 max-w-xs truncate">${w.details || ''}</td>
+      <td class="text-[10px] text-gray-500">${(w.created_at||'').substring(0,16)}</td>
+      <td class="text-center">${statusBadge(w.status)}</td>
+      <td class="text-center">
+        ${w.status === 'Pending' ? `
+          <button onclick="wdAction(${w.id}, 'approve')" class="btn-success px-3 py-1.5 rounded-lg text-[10px]">✅</button>
+          <button onclick="wdAction(${w.id}, 'reject')" class="btn-danger px-3 py-1.5 rounded-lg text-[10px] ml-1">❌</button>
+        ` : '<span class="text-gray-600 text-[10px]">Done</span>'}
+      </td>
+    </tr>
+  `).join('');
+}
+async function wdAction(id, action) {
+  const msg = action === 'reject' ? 'Reject & REFUND to user?' : 'Approve this withdrawal?';
+  if (!confirm(msg)) return;
+  const r = await apiCall('/admin/withdraw/action', { id, action });
+  showToast(r.success ? '✅ ' + r.message : '❌ ' + r.error, r.success ? 'green' : 'red');
+  if (r.success) { loadWithdraws(); loadStats(); }
+}
+
+// ================= TRANSACTIONS =================
+async function loadTransactions() {
+  const r = await apiCall('/admin/transactions', { limit: 100 });
+  if (!r.success) return;
+  const tbody = document.getElementById('transactions-list');
+  if (!r.transactions || r.transactions.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500 text-xs py-4">No transactions</td></tr>'; return;
+  }
+  tbody.innerHTML = r.transactions.map(t => `
+    <tr>
+      <td class="mono text-gray-400 text-[10px]">#${t.id}</td>
+      <td class="mono text-emerald-400 text-[10px]">${t.uid}</td>
+      <td><span class="badge ${t.type === 'DEPOSIT' ? 'badge-green' : t.type === 'WITHDRAW' ? 'badge-yellow' : 'badge-blue'}">${t.type}</span></td>
+      <td class="text-right mono font-bold">${t.amount}</td>
+      <td class="text-[10px] text-gray-400">${t.network || '-'}</td>
+      <td class="text-center">${statusBadge(t.status)}</td>
+      <td class="text-[10px] text-gray-500">${(t.created_at||'').substring(0,16)}</td>
+    </tr>
+  `).join('');
+}
+
+// ================= BROADCAST =================
+async function sendBroadcast() {
+  const message = document.getElementById('broadcastMessage').value.trim();
+  const target = document.getElementById('broadcastTarget').value;
+  if (!message) { showToast('❌ Message empty', 'red'); return; }
+  if (!confirm(`Send to ${target.toUpperCase()} users?`)) return;
+  const btn = document.getElementById('broadcastBtn');
+  btn.disabled = true; btn.textContent = "Sending...";
+  const r = await apiCall('/admin/broadcast', { message, target });
+  btn.disabled = false; btn.textContent = "📤 Send Broadcast";
+  if (r.success) {
+    showToast(`✅ Sent to ${r.sent_to}/${r.total} users`, 'green');
+    document.getElementById('broadcastMessage').value = '';
+  } else {
+    showToast('❌ ' + (r.error || 'Failed'), 'red');
+  }
+}
+
+// ================= HELPERS =================
+function statusBadge(status) {
+  const s = (status || '').toLowerCase();
+  if (s === 'pending') return '<span class="badge badge-yellow">⏳ Pending</span>';
+  if (s === 'approved' || s === 'success') return '<span class="badge badge-green">✅ ' + status + '</span>';
+  if (s === 'rejected' || s === 'failed') return '<span class="badge badge-red">❌ ' + status + '</span>';
+  return '<span class="badge badge-blue">' + status + '</span>';
+}
+
+function showToast(msg, color = 'green') {
+  const colors = { green: 'linear-gradient(135deg, #00ff87, #059669)', red: 'linear-gradient(135deg, #ef4444, #991b1b)', yellow: 'linear-gradient(135deg, #f59e0b, #b45309)' };
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.style.background = colors[color] || colors.green;
+  t.style.color = color === 'green' ? '#000' : '#fff';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+</script>
+</body>
+</html>
